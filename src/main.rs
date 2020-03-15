@@ -15,8 +15,22 @@ fn to_bgra(r: u32, g: u32, b: u32, a: u32) -> u32 {
     a << 24 | r << 16 | g << 8 | b
 }
 
+fn hit_sphere(center: Vec3, radius: f32, ray: Ray) -> bool
+{
+    let oc = ray.origin - center;
+    let a = ray.direction.dot(ray.direction);
+    let b = 2.0 * oc.dot(ray.direction);
+    let c = oc.dot(oc) - radius*radius;
+    let disc = b*b - 4.0*a*c;
+    disc > 0.0
+}
+
 fn color(r: Ray) -> Vec3
 {
+    if hit_sphere(Vec3::new(0.0,0.0,-1.0), 0.1, r)
+    {
+        return Vec3::new(1.0,0.0,0.0);
+    }
     let unit_dir: Vec3 = unit_vector(r.direction);
     let t: f32 = 0.5 *(unit_dir.y() + 1.0);
     (1.0-t)*Vec3::new(1.0,1.0,1.0) + t*Vec3::new(0.5,0.7,1.0)
@@ -36,7 +50,7 @@ fn main() {
 
     println!("Size: {}x{} (HxW)", ny, nx);
     
-    let mut buffer: Vec<Vec<u32>> = vec![vec![0; nx]; ny];
+    let mut output_buffer: Vec<Vec<u32>> = vec![vec![0; nx]; ny];
     
 
     let _lower_left_corner = Vec3::new(-2.0, -1.0, -1.0);
@@ -53,10 +67,10 @@ fn main() {
             let v = j as f32 / ny as f32;
             let r = Ray::new(_origin, _lower_left_corner + u*_horizontal + v*_vertical);
             let col = color(r);
-            buffer[(ny-1)-j][i] = to_bgra((scale*col[0]) as u32,
-                                   (scale*col[1]) as u32,
-                                   (scale*col[2]) as u32,
-                                   0);
+            output_buffer[(ny-1)-j][i] = to_bgra((scale*col[0]) as u32,
+                                                 (scale*col[1]) as u32,
+                                                 (scale*col[2]) as u32,
+                                                 0);
         }
     }
 
@@ -75,7 +89,7 @@ fn main() {
         // We unwrap here as we want this code to exit if it fails.
         // Real applications may want to handle this in a different way
 
-        let flatten_array: Vec<u32> = buffer
+        let flatten_array: Vec<u32> = output_buffer
                         .iter()
                         .flat_map(|array| array.iter())
                         .cloned()
