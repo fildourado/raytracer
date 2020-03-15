@@ -15,21 +15,32 @@ fn to_bgra(r: u32, g: u32, b: u32, a: u32) -> u32 {
     a << 24 | r << 16 | g << 8 | b
 }
 
-fn hit_sphere(center: Vec3, radius: f32, ray: Ray) -> bool
+fn hit_sphere(center: Vec3, radius: f32, ray: Ray) -> f32
 {
     let oc = ray.origin - center;
     let a = ray.direction.dot(ray.direction);
     let b = 2.0 * oc.dot(ray.direction);
     let c = oc.dot(oc) - radius*radius;
     let disc = b*b - 4.0*a*c;
-    disc > 0.0
+
+    if disc < 0.0
+    {
+        -1.0
+    }
+    else
+    {
+        (-b - disc.sqrt()) / (2.0 * a)
+    }
+
 }
 
 fn color(r: Ray) -> Vec3
 {
-    if hit_sphere(Vec3::new(0.0,0.0,-1.0), 0.1, r)
+    let t= hit_sphere(Vec3::new(0.0,0.0,-1.0), 0.5, r);
+    if t > 0.0
     {
-        return Vec3::new(1.0,0.0,0.0);
+        let n = unit_vector(r.point_at_parameter(t) - Vec3::new(0.0, 0.0, -1.0));
+        return 0.5*Vec3::new(n.x()+1.0, n.y()+1.0, n.z()+1.0);
     }
     let unit_dir: Vec3 = unit_vector(r.direction);
     let t: f32 = 0.5 *(unit_dir.y() + 1.0);
@@ -42,7 +53,7 @@ fn main() {
     let matches = App::from_yaml(yaml).get_matches();
 
     // Gets a value for config if supplied by user, or defaults to "default.conf"
-    let config = matches.value_of("config").unwrap_or("default.conf");
+    let _config = matches.value_of("config").unwrap_or("default.conf");
 
     // get the output frame height/widths
     let ny: usize = value_t!(matches, "height", usize).unwrap_or(DEFAULT_HEIGHT);
@@ -94,6 +105,6 @@ fn main() {
                         .flat_map(|array| array.iter())
                         .cloned()
                         .collect();
-        window.update_with_buffer(&flatten_array).unwrap();
+        window.update_with_buffer(&flatten_array, nx,ny).unwrap();
     }
 }
