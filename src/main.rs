@@ -1,11 +1,17 @@
+use std::f32;
 use clap::{App, load_yaml, value_t};
 use minifb::{Key, Window, WindowOptions};
 
 mod vec3;
 mod ray;
+mod world;
+mod hitable;
 
 use vec3::{Vec3, unit_vector};
 use ray::{Ray};
+use world::{Sphere};
+use hitable::{Hitable, HitableList};
+use crate::hitable::HitRecord;
 
 const DEFAULT_WIDTH: usize = 640;
 const DEFAULT_HEIGHT: usize = 480;
@@ -15,36 +21,24 @@ fn to_bgra(r: u32, g: u32, b: u32, a: u32) -> u32 {
     a << 24 | r << 16 | g << 8 | b
 }
 
-fn hit_sphere(center: Vec3, radius: f32, ray: Ray) -> f32
+fn color(r: Ray, world: &HitableList) -> Vec3
 {
-    let oc = ray.origin - center;
-    let a = ray.direction.dot(ray.direction);
-    let b = 2.0 * oc.dot(ray.direction);
-    let c = oc.dot(oc) - radius*radius;
-    let disc = b*b - 4.0*a*c;
 
-    if disc < 0.0
+    let mut rec: HitRecord = HitRecord::new(0.0,
+                                            Vec3::new(0.0,0.0,0.0),
+                                            Vec3::new(0.0,0.0,0.0));
+    if world.hit(r,0.0,f32::MAX, &mut rec)
     {
-        -1.0
+        return 0.5*Vec3::new(rec.normal.x()+1.0,
+                             rec.normal.y()+1.0,
+                             rec.normal.z()+1.0);
     }
     else
     {
-        (-b - disc.sqrt()) / (2.0 * a)
+        let unit_dir = unit_vector(r.direction);
+        let t = 0.5 * (unit_dir.y() + 1.0);
+        return (1.0-t)*Vec3::new(1.0,1.0,1.0) + t*Vec3::new(0.5,0.7,1.0)
     }
-
-}
-
-fn color(r: Ray) -> Vec3
-{
-    let t= hit_sphere(Vec3::new(0.0,0.0,-1.0), 0.5, r);
-    if t > 0.0
-    {
-        let n = unit_vector(r.point_at_parameter(t) - Vec3::new(0.0, 0.0, -1.0));
-        return 0.5*Vec3::new(n.x()+1.0, n.y()+1.0, n.z()+1.0);
-    }
-    let unit_dir: Vec3 = unit_vector(r.direction);
-    let t: f32 = 0.5 *(unit_dir.y() + 1.0);
-    (1.0-t)*Vec3::new(1.0,1.0,1.0) + t*Vec3::new(0.5,0.7,1.0)
 }
 
 fn main() {
@@ -70,6 +64,12 @@ fn main() {
     let _origin = Vec3::new(0.0, 0.0, 0.0);
     let scale = 255.99;
 
+    let mut list: Vec<Box<dyn Hitable>> = Vec::new();
+    list.push(Box::new(Sphere::new(Vec3::new(0.0,0.0,-1.0), 0.5)));
+    list.push(Box::new(Sphere::new(Vec3::new(0.0,-100.5,-1.0), 100.0)));
+
+    let world: HitableList = HitableList::new(list);
+
     for j in (0..ny).rev()
     {
         for i in 0..nx
@@ -77,7 +77,7 @@ fn main() {
             let u = i as f32 / nx as f32;
             let v = j as f32 / ny as f32;
             let r = Ray::new(_origin, _lower_left_corner + u*_horizontal + v*_vertical);
-            let col = color(r);
+            let col = color(r, &world);
             output_buffer[(ny-1)-j][i] = to_bgra((scale*col[0]) as u32,
                                                  (scale*col[1]) as u32,
                                                  (scale*col[2]) as u32,
