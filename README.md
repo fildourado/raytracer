@@ -38,3 +38,15 @@ SUBCOMMANDS:
     test    controls testing features
 
 ```
+
+
+# What's left?
+[ ] Diffuse Materials
+[ ] Positionable Camera
+[ ] Defocus Blur
+
+
+# Output
+
+## Singular Object in Scene
+![one_ball](imgs/one_ball.png)

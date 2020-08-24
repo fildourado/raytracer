@@ -16,7 +16,7 @@ use hitable::{Hitable, HitableList, HitRecord};
 use camera::{Camera};
 use rand::{Rng};
 
-const DEFAULT_WIDTH: usize = 640;
+const DEFAULT_WIDTH: usize = 960;
 const DEFAULT_HEIGHT: usize = 480;
 
 
