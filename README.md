@@ -41,9 +41,9 @@ SUBCOMMANDS:
 
 
 # What's left?
-[ ] Diffuse Materials
-[ ] Positionable Camera
-[ ] Defocus Blur
+* Diffuse Materials
+* Positionable Camera
+* Defocus Blur
 
 
 # Output
