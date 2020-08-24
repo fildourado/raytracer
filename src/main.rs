@@ -1,17 +1,20 @@
 use std::f32;
 use clap::{App, load_yaml, value_t};
 use minifb::{Key, Window, WindowOptions};
+use rand;
 
 mod vec3;
 mod ray;
 mod world;
 mod hitable;
+mod camera;
 
 use vec3::{Vec3, unit_vector};
 use ray::{Ray};
 use world::{Sphere};
-use hitable::{Hitable, HitableList};
-use crate::hitable::HitRecord;
+use hitable::{Hitable, HitableList, HitRecord};
+use camera::{Camera};
+use rand::{Rng};
 
 const DEFAULT_WIDTH: usize = 640;
 const DEFAULT_HEIGHT: usize = 480;
@@ -27,7 +30,7 @@ fn color(r: Ray, world: &HitableList) -> Vec3
     let mut rec: HitRecord = HitRecord::new(0.0,
                                             Vec3::new(0.0,0.0,0.0),
                                             Vec3::new(0.0,0.0,0.0));
-    if world.hit(r,0.0,f32::MAX, &mut rec)
+    if world.hit(r,0.0001 ,f32::MAX, &mut rec)
     {
         return 0.5*Vec3::new(rec.normal.x()+1.0,
                              rec.normal.y()+1.0,
@@ -42,7 +45,7 @@ fn color(r: Ray, world: &HitableList) -> Vec3
 }
 
 fn main() {
-
+    let mut rng = rand::thread_rng();
     let yaml = load_yaml!("cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
 
@@ -52,16 +55,20 @@ fn main() {
     // get the output frame height/widths
     let ny: usize = value_t!(matches, "height", usize).unwrap_or(DEFAULT_HEIGHT);
     let nx: usize = value_t!(matches, "width", usize).unwrap_or(DEFAULT_WIDTH);
+    let ns: usize = 10;
+
 
     println!("Size: {}x{} (HxW)", ny, nx);
     
     let mut output_buffer: Vec<Vec<u32>> = vec![vec![0; nx]; ny];
     
-
     let _lower_left_corner = Vec3::new(-2.0, -1.0, -1.0);
     let _horizontal = Vec3::new(4.0, 0.0, 0.0);
     let _vertical = Vec3::new(0.0, 2.0, 0.0);
     let _origin = Vec3::new(0.0, 0.0, 0.0);
+
+    let cam = Camera::new(_origin, _lower_left_corner, _horizontal, _vertical);
+
     let scale = 255.99;
 
     let mut list: Vec<Box<dyn Hitable>> = Vec::new();
@@ -74,14 +81,19 @@ fn main() {
     {
         for i in 0..nx
         {
-            let u = i as f32 / nx as f32;
-            let v = j as f32 / ny as f32;
-            let r = Ray::new(_origin, _lower_left_corner + u*_horizontal + v*_vertical);
-            let col = color(r, &world);
-            output_buffer[(ny-1)-j][i] = to_bgra((scale*col[0]) as u32,
-                                                 (scale*col[1]) as u32,
-                                                 (scale*col[2]) as u32,
-                                                 0);
+            let mut col = Vec3::new(0.0,0.0,0.0);
+            for _ in 0..ns
+            {
+                let u = (i as f32 + rng.gen_range(0.0, 1.0)) / nx as f32;
+                let v = (j as f32 + rng.gen_range(0.0, 1.0)) / ny as f32;
+                let r = cam.get_ray(u, v);
+                col += color(r, &world);
+            }
+            col /= ns as f32;
+            output_buffer[(ny - 1) - j][i] = to_bgra((scale * col[0]) as u32,
+                                         (scale * col[1]) as u32,
+                                         (scale * col[2]) as u32,
+                                         0);
         }
     }
 
