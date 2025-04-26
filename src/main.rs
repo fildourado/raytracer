@@ -84,9 +84,9 @@ fn main() {
             let mut col = Vec3::new(0.0,0.0,0.0);
             for _ in 0..ns
             {
-                let u = (i as f32 + rng.gen_range(0.0, 1.0)) / nx as f32;
-                let v = (j as f32 + rng.gen_range(0.0, 1.0)) / ny as f32;
-                let r = cam.get_ray(u, v);
+                let u: f32 = (i as f32 + rng.gen_range(0.0, 1.0)) / nx as f32;
+                let v: f32 = (j as f32 + rng.gen_range(0.0, 1.0)) / ny as f32;
+                let r: Ray = cam.get_ray(u, v);
                 col += color(r, &world);
             }
             col /= ns as f32;
@@ -97,26 +97,36 @@ fn main() {
         }
     }
 
-    let mut window = Window::new(
-        "Raytracer - ESC to exit",
-        nx,
-        ny,
-        WindowOptions::default(),
-    )
-    .unwrap_or_else(|e| {
-        panic!("{}", e);
-    });
-
-    while window.is_open() && !window.is_key_down(Key::Escape)
+    if true
     {
-        // We unwrap here as we want this code to exit if it fails.
-        // Real applications may want to handle this in a different way
-
-        let flatten_array: Vec<u32> = output_buffer
-                        .iter()
-                        .flat_map(|array| array.iter())
-                        .cloned()
-                        .collect();
-        window.update_with_buffer(&flatten_array, nx,ny).unwrap();
+        //image::save_buffer("image.png", output_buffer, nx, ny, image::Rgba(8))
+        //.unwrap_or_else(|e| {
+        //    panic!("{}", e);
+        //})
+    }
+    else 
+    {
+        let mut window = Window::new(
+            "Raytracer - ESC to exit",
+            nx,
+            ny,
+            WindowOptions::default(),
+        )
+        .unwrap_or_else(|e| {
+            panic!("{}", e);
+        });
+    
+        while window.is_open() && !window.is_key_down(Key::Escape)
+        {
+            // We unwrap here as we want this code to exit if it fails.
+            // Real applications may want to handle this in a different way
+    
+            let flatten_array: Vec<u32> = output_buffer
+                            .iter()
+                            .flat_map(|array| array.iter())
+                            .cloned()
+                            .collect();
+            window.update_with_buffer(&flatten_array, nx,ny).unwrap();
+        }            
     }
 }

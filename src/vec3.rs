@@ -8,6 +8,7 @@ pub struct Vec3 {
 
 
 impl Vec3 {
+  /// Creates a 3D Vector given an [x, y, z] coordinate
   pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
     Vec3 { e: [x, y, z] }
   }

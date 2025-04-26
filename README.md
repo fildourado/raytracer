@@ -1,7 +1,12 @@
 # Intro
-This project is a Rust based Raytracer based on Peter Shirley's "Ray Tracing in One Weekend V1.55", which is centered around C++
+This project is a Rust based Raytracer based on Peter Shirley's Ray Tracking books found here: https://github.com/RayTracing/raytracing.github.io
 
-This is purely educational and just a way for me to familiarize myself with Rust, wouldn't recommend including this in a product.
+There are 3 books in the series (V4.0.1):
+- Ray Tracing: In One Weekend
+- Ray Tracing: The Next Week
+- Ray Tracing: The Rest of Your Life
+
+The goal is to implement as many of the tools/features/techniques in this series under one Rust package.
 
 # Getting Started (Linux)
 
